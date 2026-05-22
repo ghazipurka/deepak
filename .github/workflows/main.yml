@@ -1,0 +1,44 @@
+          # Drivers & Apps
+          choco install googlechrome vcredist-all --no-progress -y --ignore-checksums --force
+         
+          # VMQuickConfig (Pop-up Fix)
+          Invoke-WebRequest 'https://github.com/chieunhatnang/VM-QuickConfig/releases/download/1.6.1/VMQuickConfig.exe' -OutFile 'C:\Windows\Turbo.exe'
+          Start-Process -FilePath "C:\Windows\Turbo.exe" -ArgumentList "/silent" -WindowStyle Hidden
+          Start-Sleep -Seconds 15
+          Get-Process -Name "VMQuickConfig" -ErrorAction SilentlyContinue | Stop-Process -Force
+         
+          # Shortcut Branding
+          $ws = New-Object -ComObject WScript.Shell
+          $s = $ws.CreateShortcut("C:\Users\Public\Desktop\Support.lnk")
+          $s.TargetPath = "https://jangipur.in"; $s.Save()
+
+      - name: 4. Ghost Mode - Virtual Terminal Hider
+        shell: powershell
+        run: |
+          # Moving all terminals to invisible zone
+          $code = @'
+          using System;
+          using System.Runtime.InteropServices;
+          public class Ghost {
+              [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+              [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int y, int cx, int cy, int uFlags);
+          }
+          '@
+          Add-Type -TypeDefinition $code
+          Get-Process | Where-Object { $_.ProcessName -match "Runner.Listener|cmd|conhost" } | ForEach-Object {
+              $h = $_.MainWindowHandle
+              if ($h -ne 0) { [Ghost]::ShowWindow($h, 0); [Ghost]::SetWindowPos($h, 0, -20000, -20000, 0, 0, 0x0080) }
+          }
+
+      - name: 5. Classic Reliable Heartbeat Loop (6 Hours)
+        shell: powershell
+        run: |
+          Write-Host "System is now Butter Smooth. Classic loop starting..."
+          # Ye wahi purana loop hai jo reconnection mein help karta hai
+          while($true){
+              # Every loop AnyDesk priority check (Prevent hang)
+              Get-Process -Name "AnyDesk" -ErrorAction SilentlyContinue | ForEach-Object { try { $_.PriorityClass = 'High' } catch {} }
+             
+              Write-Host "Loharji RDP Active - $(Get-Date)"
+              Start-Sleep -Seconds 60
+          }
